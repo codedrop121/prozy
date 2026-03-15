@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: prozy
+    runtime: node
+    plan: free
+    buildCommand: ""
+    startCommand: node index.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: CACHE_TTL
+        value: 300
+      - key: MAX_CACHE_SIZE
+        value: 200
