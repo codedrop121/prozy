@@ -43,13 +43,28 @@ function isCacheable(method, statusCode) {
   return method === "GET" && statusCode >= 200 && statusCode < 400;
 }
 
+// --- CORS headers ---
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Expose-Headers": "X-Prozy-Cache",
+};
+
 // --- Proxy handler ---
 function handleRequest(clientReq, clientRes) {
+  // Handle CORS preflight
+  if (clientReq.method === "OPTIONS") {
+    clientRes.writeHead(204, CORS_HEADERS);
+    clientRes.end();
+    return;
+  }
+
   const targetUrl = clientReq.url;
 
   // Health check endpoint
   if (targetUrl === "/health") {
-    clientRes.writeHead(200, { "Content-Type": "application/json" });
+    clientRes.writeHead(200, { ...CORS_HEADERS, "Content-Type": "application/json" });
     clientRes.end(JSON.stringify({ status: "ok", cached: cache.size }));
     return;
   }
@@ -61,7 +76,7 @@ function handleRequest(clientReq, clientRes) {
       const age = Math.round((Date.now() - val.timestamp) / 1000);
       entries.push({ key: key.slice(0, 12) + "...", age_seconds: age });
     }
-    clientRes.writeHead(200, { "Content-Type": "application/json" });
+    clientRes.writeHead(200, { ...CORS_HEADERS, "Content-Type": "application/json" });
     clientRes.end(JSON.stringify({ total: cache.size, entries }));
     return;
   }
@@ -71,7 +86,7 @@ function handleRequest(clientReq, clientRes) {
   try {
     parsed = new URL(targetUrl);
   } catch {
-    clientRes.writeHead(400, { "Content-Type": "text/plain" });
+    clientRes.writeHead(400, { ...CORS_HEADERS, "Content-Type": "text/plain" });
     clientRes.end("Bad Request: invalid target URL. Use full URL like http://example.com/path");
     return;
   }
@@ -84,7 +99,7 @@ function handleRequest(clientReq, clientRes) {
     const cached = getCachedResponse(cacheKey);
     if (cached) {
       console.log(`[CACHE HIT]  ${method} ${targetUrl}`);
-      const headers = { ...cached.headers, "X-Prozy-Cache": "HIT" };
+      const headers = { ...cached.headers, ...CORS_HEADERS, "X-Prozy-Cache": "HIT" };
       clientRes.writeHead(cached.statusCode, headers);
       clientRes.end(cached.body);
       return;
@@ -120,7 +135,7 @@ function handleRequest(clientReq, clientRes) {
         setCachedResponse(cacheKey, proxyRes.statusCode, proxyRes.headers, body);
       }
 
-      const headers = { ...proxyRes.headers, "X-Prozy-Cache": "MISS" };
+      const headers = { ...proxyRes.headers, ...CORS_HEADERS, "X-Prozy-Cache": "MISS" };
       clientRes.writeHead(proxyRes.statusCode, headers);
       clientRes.end(body);
     });
@@ -128,7 +143,7 @@ function handleRequest(clientReq, clientRes) {
 
   proxyReq.on("error", (err) => {
     console.error(`[ERROR] ${method} ${targetUrl} - ${err.message}`);
-    clientRes.writeHead(502, { "Content-Type": "text/plain" });
+    clientRes.writeHead(502, { ...CORS_HEADERS, "Content-Type": "text/plain" });
     clientRes.end(`Bad Gateway: ${err.message}`);
   });
 
