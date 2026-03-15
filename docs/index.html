@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prozy - Web Proxy</title>
+  <title>Prozy - Browse the Web</title>
   <style>
     :root {
       --bg: #0a0a0f;
@@ -24,9 +24,9 @@
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     .bg-grid {
@@ -38,657 +38,548 @@
         linear-gradient(90deg, rgba(108, 92, 231, 0.03) 1px, transparent 1px);
       background-size: 60px 60px;
       z-index: 0;
+      pointer-events: none;
     }
 
-    .container {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 0 24px;
+    /* --- Landing view (centered like Google) --- */
+    .landing {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       position: relative;
       z-index: 1;
+      padding: 20px;
+      transition: all 0.3s;
     }
 
-    /* Header */
-    header {
-      padding: 24px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .landing.minimized {
+      flex: 0;
+      padding: 0;
     }
 
-    .logo {
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      color: var(--accent);
-    }
-
-    .nav-links a {
-      color: var(--muted);
-      text-decoration: none;
-      margin-left: 28px;
-      font-size: 0.9rem;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--text); }
-
-    /* Hero */
-    .hero {
-      text-align: center;
-      padding: 80px 0 40px;
-    }
-
-    .badge {
-      display: inline-block;
-      background: rgba(108, 92, 231, 0.12);
-      color: var(--accent);
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 24px;
-      border: 1px solid rgba(108, 92, 231, 0.2);
-    }
-
-    .hero h1 {
-      font-size: 3.5rem;
+    .logo-big {
+      font-size: 4.5rem;
       font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 16px;
+      letter-spacing: 4px;
+      margin-bottom: 8px;
       background: linear-gradient(135deg, #fff 0%, #6c5ce7 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      transition: all 0.3s;
     }
 
-    .hero p {
-      font-size: 1.15rem;
+    .landing.minimized .logo-big {
+      font-size: 1.4rem;
+      margin-bottom: 0;
+    }
+
+    .tagline {
+      font-size: 1.1rem;
       color: var(--muted);
-      max-width: 480px;
-      margin: 0 auto 0;
+      margin-bottom: 40px;
+      transition: all 0.3s;
     }
 
-    /* Proxy Input Section */
-    .proxy-section {
-      padding: 48px 0 60px;
+    .landing.minimized .tagline { display: none; }
+
+    /* --- Search bar --- */
+    .search-wrap {
+      width: 100%;
+      max-width: 640px;
+      transition: all 0.3s;
     }
 
-    .proxy-box {
-      max-width: 700px;
-      margin: 0 auto;
+    .landing.minimized .search-wrap {
+      max-width: 100%;
+    }
+
+    .search-bar {
+      display: flex;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 36px 32px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    }
-
-    .proxy-box h2 {
-      text-align: center;
-      font-size: 1.3rem;
-      margin-bottom: 8px;
-    }
-
-    .proxy-box .subtitle {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin-bottom: 28px;
-    }
-
-    .input-row {
-      display: flex;
-      gap: 12px;
-    }
-
-    .url-input {
-      flex: 1;
-      background: var(--bg);
       border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 18px;
-      font-size: 1rem;
-      color: var(--text);
-      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-      outline: none;
-      transition: border-color 0.2s;
+      border-radius: 28px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .url-input::placeholder { color: #555568; }
-    .url-input:focus { border-color: var(--accent); }
+    .search-bar:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 30px var(--accent-glow);
+    }
 
-    .go-btn {
-      padding: 14px 32px;
-      border-radius: 10px;
-      background: var(--accent);
-      color: #fff;
-      font-size: 1rem;
-      font-weight: 700;
+    .search-bar input {
+      flex: 1;
+      background: transparent;
       border: none;
+      padding: 16px 24px;
+      font-size: 1.05rem;
+      color: var(--text);
+      outline: none;
+      font-family: inherit;
+    }
+
+    .search-bar input::placeholder { color: #555568; }
+
+    .search-bar button {
+      background: var(--accent);
+      border: none;
+      padding: 16px 28px;
       cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 4px 24px var(--accent-glow);
-      white-space: nowrap;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .go-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px var(--accent-glow);
+    .search-bar button:hover { background: #7c6cf7; }
+
+    .search-bar button svg {
+      width: 20px; height: 20px;
+      fill: #fff;
     }
 
-    .go-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .search-bar button.loading svg { animation: spin 1s linear infinite; }
 
-    /* Result area */
-    .result-area {
-      margin-top: 24px;
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Top bar (when browsing) */
+    .top-bar {
       display: none;
-    }
-
-    .result-area.visible { display: block; }
-
-    .result-bar {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      gap: 12px;
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 2;
     }
 
-    .result-status {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.85rem;
+    .top-bar.visible { display: flex; }
+
+    .top-bar .logo-sm {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
     }
 
-    .status-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-    }
-    .status-dot.success { background: var(--green); }
-    .status-dot.error { background: var(--red); }
-    .status-dot.loading { background: var(--orange); animation: pulse 1s infinite; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+    .top-bar .search-bar {
+      flex: 1;
+      border-radius: 10px;
     }
 
-    .cache-badge {
-      font-size: 0.75rem;
-      font-weight: 600;
+    .top-bar .search-bar input { padding: 10px 16px; font-size: 0.9rem; }
+    .top-bar .search-bar button { padding: 10px 20px; }
+    .top-bar .search-bar button svg { width: 16px; height: 16px; }
+
+    .cache-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
       padding: 4px 10px;
       border-radius: 6px;
       letter-spacing: 0.5px;
+      flex-shrink: 0;
+      display: none;
     }
-    .cache-badge.hit {
+    .cache-pill.hit {
+      display: block;
       background: rgba(0, 230, 118, 0.12);
       color: var(--green);
       border: 1px solid rgba(0, 230, 118, 0.2);
     }
-    .cache-badge.miss {
+    .cache-pill.miss {
+      display: block;
       background: rgba(255, 171, 64, 0.12);
       color: var(--orange);
       border: 1px solid rgba(255, 171, 64, 0.2);
     }
 
-    .result-frame {
-      width: 100%;
-      height: 400px;
+    .time-pill {
+      font-size: 0.75rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      display: none;
+    }
+    .time-pill.visible { display: block; }
+
+    /* Quick links */
+    .quick-links {
+      display: flex;
+      gap: 10px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .landing.minimized .quick-links { display: none; }
+
+    .quick-link {
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-link:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    /* Content viewer */
+    .viewer {
+      flex: 1;
+      display: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    .viewer.visible { display: flex; flex-direction: column; }
+
+    .viewer iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
       background: #fff;
     }
 
-    .result-error {
-      background: rgba(255, 82, 82, 0.08);
-      border: 1px solid rgba(255, 82, 82, 0.2);
-      border-radius: 10px;
-      padding: 16px 20px;
-      color: var(--red);
-      font-size: 0.9rem;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-    }
-
-    .result-info {
-      margin-top: 12px;
-      display: flex;
-      gap: 20px;
-      flex-wrap: wrap;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .result-info span {
+    .viewer .error-msg {
+      flex: 1;
       display: flex;
       align-items: center;
-      gap: 6px;
-    }
-
-    .result-info code {
-      color: var(--accent);
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-    }
-
-    /* Recent URLs */
-    .recent {
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
-    }
-
-    .recent-label {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 10px;
-    }
-
-    .recent-list {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .recent-item {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 14px;
-      font-size: 0.8rem;
-      color: var(--muted);
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-    }
-
-    .recent-item:hover {
-      border-color: var(--accent);
-      color: var(--text);
-    }
-
-    /* Features */
-    .features {
-      padding: 60px 0;
-    }
-
-    .features h2 {
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      padding: 40px;
       text-align: center;
-      font-size: 2rem;
-      margin-bottom: 48px;
     }
 
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 20px;
+    .viewer .error-msg .error-icon { font-size: 3rem; }
+    .viewer .error-msg .error-text { color: var(--red); font-size: 1.1rem; }
+    .viewer .error-msg .error-detail { color: var(--muted); font-size: 0.9rem; max-width: 400px; }
+
+    .viewer .error-msg .try-again {
+      padding: 10px 24px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
     }
 
-    .feature-card {
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #444;
+      font-size: 0.8rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer a { color: var(--accent); text-decoration: none; }
+
+    .landing.minimized ~ .footer { display: none; }
+
+    /* Settings gear */
+    .settings-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 40px; height: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      font-size: 1.2rem;
+      transition: all 0.2s;
+    }
+    .settings-btn:hover { border-color: var(--accent); transform: rotate(90deg); }
+
+    .settings-panel {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 28px;
-      transition: all 0.25s;
+      padding: 20px;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      width: 300px;
     }
-    .feature-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-    }
+    .settings-panel.visible { display: block; }
 
-    .feature-icon { font-size: 2rem; margin-bottom: 14px; }
-    .feature-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
-    .feature-card p { font-size: 0.9rem; color: var(--muted); }
-
-    /* Server config banner */
-    .server-config {
-      max-width: 700px;
-      margin: 0 auto 40px;
-      background: rgba(108, 92, 231, 0.06);
-      border: 1px solid rgba(108, 92, 231, 0.15);
-      border-radius: 12px;
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .server-config-icon { font-size: 1.5rem; }
-
-    .server-config-text {
-      flex: 1;
-      font-size: 0.85rem;
+    .settings-panel label {
+      display: block;
+      font-size: 0.8rem;
       color: var(--muted);
+      margin-bottom: 6px;
     }
 
-    .server-config-text strong { color: var(--text); }
-
-    .server-input-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .server-url-input {
+    .settings-panel input {
+      width: 100%;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 0.8rem;
+      padding: 10px 14px;
       color: var(--text);
+      font-size: 0.85rem;
       font-family: 'Cascadia Code', 'Fira Code', monospace;
       outline: none;
-      width: 260px;
-      transition: border-color 0.2s;
+      margin-bottom: 12px;
     }
+    .settings-panel input:focus { border-color: var(--accent); }
 
-    .server-url-input:focus { border-color: var(--accent); }
-
-    .save-btn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #fff;
-      font-size: 0.8rem;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .save-btn:hover { transform: translateY(-1px); }
-
-    .status-indicator {
+    .settings-panel .status {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       font-size: 0.8rem;
-      margin-top: 8px;
     }
 
-    .status-indicator .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
+    .settings-panel .dot {
+      width: 8px; height: 8px; border-radius: 50%;
     }
-    .status-indicator .dot.online { background: var(--green); }
-    .status-indicator .dot.offline { background: var(--red); }
-    .status-indicator .dot.unknown { background: var(--muted); }
+    .dot.online { background: var(--green); }
+    .dot.offline { background: var(--red); }
+    .dot.checking { background: var(--orange); animation: pulse 1s infinite; }
 
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px 0;
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    footer a { color: var(--accent); text-decoration: none; }
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
     @media (max-width: 600px) {
-      .hero h1 { font-size: 2.2rem; }
-      .hero p { font-size: 1rem; }
-      header { flex-direction: column; gap: 16px; }
-      .nav-links a { margin-left: 16px; }
-      .input-row { flex-direction: column; }
-      .go-btn { width: 100%; }
-      .proxy-box { padding: 24px 18px; }
-      .server-config { flex-direction: column; text-align: center; }
-      .server-url-input { width: 100%; }
+      .logo-big { font-size: 3rem; }
+      .search-bar input { padding: 14px 16px; font-size: 0.95rem; }
+      .quick-links { gap: 6px; }
+      .quick-link { padding: 6px 14px; font-size: 0.8rem; }
+      .top-bar { padding: 10px 12px; gap: 8px; }
     }
   </style>
 </head>
 <body>
   <div class="bg-grid"></div>
 
-  <div class="container">
-    <header>
-      <div class="logo">PROZY</div>
-      <nav class="nav-links">
-        <a href="#features">Features</a>
-        <a href="https://github.com/codedrop121/prozy" target="_blank">GitHub</a>
-      </nav>
-    </header>
+  <!-- Top bar (shown when browsing) -->
+  <div class="top-bar" id="topBar">
+    <div class="logo-sm" onclick="goHome()">PROZY</div>
+    <div class="search-bar">
+      <input type="text" id="topInput" placeholder="Enter a URL..." spellcheck="false" autocomplete="off">
+      <button onclick="browse(document.getElementById('topInput').value)" id="topGoBtn">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <div class="cache-pill" id="cachePill"></div>
+    <div class="time-pill" id="timePill"></div>
+  </div>
 
-    <section class="hero">
-      <div class="badge">Fast &amp; Cached</div>
-      <h1>Browse Through<br>Prozy</h1>
-      <p>Enter any URL below and browse it through the Prozy caching proxy. Cached pages load instantly.</p>
-    </section>
-
-    <!-- Server Config -->
-    <div class="server-config">
-      <div class="server-config-icon">&#x2699;&#xFE0F;</div>
-      <div class="server-config-text">
-        <strong>Proxy Server URL</strong><br>
-        Point this to your running Prozy instance.
-        <div class="status-indicator" id="serverStatus">
-          <div class="dot unknown"></div>
-          <span>Not checked</span>
-        </div>
-      </div>
-      <div>
-        <div class="server-input-row">
-          <input type="text" class="server-url-input" id="serverUrl" value="http://localhost:8080" placeholder="http://localhost:8080">
-          <button class="save-btn" onclick="saveServer()">Save</button>
-        </div>
+  <!-- Landing (Google-style centered) -->
+  <div class="landing" id="landing">
+    <div class="logo-big">PROZY</div>
+    <div class="tagline">Browse any website</div>
+    <div class="search-wrap">
+      <div class="search-bar">
+        <input type="text" id="mainInput" placeholder="Enter a URL and hit Go..." spellcheck="false" autocomplete="off" autofocus>
+        <button onclick="browse(document.getElementById('mainInput').value)" id="mainGoBtn">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
       </div>
     </div>
+    <div class="quick-links" id="quickLinks"></div>
+  </div>
 
-    <!-- Proxy Input -->
-    <section class="proxy-section">
-      <div class="proxy-box">
-        <h2>Enter a URL</h2>
-        <p class="subtitle">Paste any website link and hit Go to fetch it through the proxy</p>
+  <!-- Content viewer -->
+  <div class="viewer" id="viewer"></div>
 
-        <div class="input-row">
-          <input type="text" class="url-input" id="urlInput" placeholder="https://example.com" autocomplete="off" spellcheck="false">
-          <button class="go-btn" id="goBtn" onclick="proxyFetch()">Go</button>
-        </div>
+  <!-- Footer -->
+  <div class="footer">
+    <a href="https://github.com/codedrop121/prozy" target="_blank">GitHub</a>
+  </div>
 
-        <!-- Result Area -->
-        <div class="result-area" id="resultArea">
-          <div class="result-bar">
-            <div class="result-status" id="resultStatus"></div>
-            <div id="cacheBadge"></div>
-          </div>
-          <div id="resultContent"></div>
-          <div class="result-info" id="resultInfo"></div>
-        </div>
-
-        <!-- Recent URLs -->
-        <div class="recent" id="recentSection" style="display:none;">
-          <div class="recent-label">Recent</div>
-          <div class="recent-list" id="recentList"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="features" id="features">
-      <h2>How It Works</h2>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <div class="feature-icon">&#x1F310;</div>
-          <h3>Enter a URL</h3>
-          <p>Paste any website URL into the input box above and click Go.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">&#x26A1;</div>
-          <h3>Proxied &amp; Cached</h3>
-          <p>The request is routed through your Prozy server. Responses are cached for instant repeat loads.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">&#x1F680;</div>
-          <h3>Instant Repeats</h3>
-          <p>Visit the same URL again and it loads from cache instantly. Look for the green CACHE HIT badge.</p>
-        </div>
-      </div>
-    </section>
-
-    <footer>
-      <p>Prozy &mdash; Open Source Caching Proxy &mdash; <a href="https://github.com/codedrop121/prozy" target="_blank">View on GitHub</a></p>
-    </footer>
+  <!-- Settings -->
+  <div class="settings-btn" onclick="toggleSettings()">&#x2699;</div>
+  <div class="settings-panel" id="settingsPanel">
+    <label>Proxy Server URL</label>
+    <input type="text" id="serverInput" value="http://localhost:8080" placeholder="http://localhost:8080" oninput="checkServerDebounced()">
+    <div class="status" id="serverStatusText">
+      <div class="dot" id="serverDot"></div>
+      <span id="serverLabel">Click to check</span>
+    </div>
   </div>
 
   <script>
-    const STORAGE_KEY_SERVER = "prozy_server_url";
-    const STORAGE_KEY_RECENT = "prozy_recent";
+    const STORAGE_SERVER = "prozy_server";
+    const STORAGE_RECENT = "prozy_recent";
 
-    // Load saved server URL
-    const saved = localStorage.getItem(STORAGE_KEY_SERVER);
-    if (saved) document.getElementById("serverUrl").value = saved;
+    // Load saved server
+    const savedServer = localStorage.getItem(STORAGE_SERVER);
+    if (savedServer) document.getElementById("serverInput").value = savedServer;
 
-    // Load recent URLs
+    // Recent URLs
     function getRecent() {
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY_RECENT)) || []; }
-      catch { return []; }
+      try { return JSON.parse(localStorage.getItem(STORAGE_RECENT)) || []; } catch { return []; }
     }
-
     function addRecent(url) {
-      let recent = getRecent().filter(u => u !== url);
-      recent.unshift(url);
-      if (recent.length > 5) recent = recent.slice(0, 5);
-      localStorage.setItem(STORAGE_KEY_RECENT, JSON.stringify(recent));
-      renderRecent();
+      let r = getRecent().filter(u => u !== url);
+      r.unshift(url);
+      if (r.length > 6) r = r.slice(0, 6);
+      localStorage.setItem(STORAGE_RECENT, JSON.stringify(r));
+      renderQuickLinks();
     }
-
-    function renderRecent() {
-      const list = getRecent();
-      const section = document.getElementById("recentSection");
-      const container = document.getElementById("recentList");
-      if (list.length === 0) { section.style.display = "none"; return; }
-      section.style.display = "block";
-      container.innerHTML = list.map(url => {
-        const short = url.replace(/^https?:\/\//, "").slice(0, 30);
-        return '<div class="recent-item" onclick="useRecent(\'' + url.replace(/'/g, "\\'") + '\')">' + short + '</div>';
+    function renderQuickLinks() {
+      const links = getRecent();
+      const el = document.getElementById("quickLinks");
+      if (!links.length) {
+        el.innerHTML = ["wikipedia.org", "example.com", "httpbin.org"].map(u =>
+          '<div class="quick-link" onclick="browse(\'' + u + '\')">' + u + '</div>'
+        ).join("");
+        return;
+      }
+      el.innerHTML = links.map(u => {
+        const short = u.replace(/^https?:\/\//, "").replace(/\/$/, "").slice(0, 28);
+        return '<div class="quick-link" onclick="browse(\'' + u.replace(/'/g, "\\'") + '\')">' + short + '</div>';
       }).join("");
     }
+    renderQuickLinks();
 
-    function useRecent(url) {
-      document.getElementById("urlInput").value = url;
-      proxyFetch();
-    }
+    // Enter key on both inputs
+    document.getElementById("mainInput").addEventListener("keydown", e => { if (e.key === "Enter") browse(e.target.value); });
+    document.getElementById("topInput").addEventListener("keydown", e => { if (e.key === "Enter") browse(e.target.value); });
 
-    renderRecent();
-
-    // Save server URL
-    function saveServer() {
-      const url = document.getElementById("serverUrl").value.trim().replace(/\/+$/, "");
-      localStorage.setItem(STORAGE_KEY_SERVER, url);
-      checkServer(url);
-    }
-
-    // Check server health
-    async function checkServer(serverUrl) {
-      const el = document.getElementById("serverStatus");
-      el.innerHTML = '<div class="dot" style="background:var(--orange);animation:pulse 1s infinite;"></div><span>Checking...</span>';
-      try {
-        const res = await fetch(serverUrl + "/health", { mode: "cors" });
-        const data = await res.json();
-        if (data.status === "ok") {
-          el.innerHTML = '<div class="dot online"></div><span>Online &mdash; ' + data.cached + ' cached</span>';
-        } else {
-          el.innerHTML = '<div class="dot offline"></div><span>Unexpected response</span>';
-        }
-      } catch (e) {
-        el.innerHTML = '<div class="dot offline"></div><span>Offline &mdash; cannot connect</span>';
-      }
-    }
-
-    // Initial server check
-    checkServer(document.getElementById("serverUrl").value.trim().replace(/\/+$/, ""));
-
-    // Handle Enter key
-    document.getElementById("urlInput").addEventListener("keydown", function(e) {
-      if (e.key === "Enter") proxyFetch();
-    });
-
-    // Main proxy fetch
-    async function proxyFetch() {
-      let url = document.getElementById("urlInput").value.trim();
-      if (!url) return;
-
-      // Auto-add protocol
+    // Main browse function
+    async function browse(url) {
+      if (!url || !url.trim()) return;
+      url = url.trim();
       if (!/^https?:\/\//i.test(url)) url = "https://" + url;
 
-      const serverUrl = document.getElementById("serverUrl").value.trim().replace(/\/+$/, "");
-      const proxyUrl = serverUrl + "/" + url;
+      const server = document.getElementById("serverInput").value.trim().replace(/\/+$/, "");
+      localStorage.setItem(STORAGE_SERVER, server);
 
-      const resultArea = document.getElementById("resultArea");
-      const resultStatus = document.getElementById("resultStatus");
-      const cacheBadge = document.getElementById("cacheBadge");
-      const resultContent = document.getElementById("resultContent");
-      const resultInfo = document.getElementById("resultInfo");
+      // Switch to browsing view
+      document.getElementById("landing").style.display = "none";
+      document.getElementById("topBar").classList.add("visible");
+      document.getElementById("topInput").value = url;
 
-      // Show loading
-      resultArea.classList.add("visible");
-      resultStatus.innerHTML = '<div class="status-dot loading"></div><span>Fetching ' + url + '...</span>';
-      cacheBadge.innerHTML = "";
-      resultContent.innerHTML = "";
-      resultInfo.innerHTML = "";
+      const viewer = document.getElementById("viewer");
+      viewer.classList.add("visible");
+      viewer.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);">Loading...</div>';
 
-      const goBtn = document.getElementById("goBtn");
-      goBtn.disabled = true;
-      goBtn.textContent = "...";
+      const cachePill = document.getElementById("cachePill");
+      const timePill = document.getElementById("timePill");
+      cachePill.className = "cache-pill";
+      cachePill.textContent = "";
+      timePill.className = "time-pill";
 
       const startTime = performance.now();
 
       try {
-        const res = await fetch(proxyUrl);
+        const res = await fetch(server + "/" + url);
         const elapsed = Math.round(performance.now() - startTime);
         const cacheHeader = res.headers.get("X-Prozy-Cache");
         const contentType = res.headers.get("Content-Type") || "";
 
-        // Status
-        resultStatus.innerHTML = '<div class="status-dot success"></div><span>Status: ' + res.status + '</span>';
-
         // Cache badge
         if (cacheHeader === "HIT") {
-          cacheBadge.innerHTML = '<span class="cache-badge hit">CACHE HIT</span>';
+          cachePill.className = "cache-pill hit";
+          cachePill.textContent = "CACHED";
         } else if (cacheHeader === "MISS") {
-          cacheBadge.innerHTML = '<span class="cache-badge miss">CACHE MISS</span>';
+          cachePill.className = "cache-pill miss";
+          cachePill.textContent = "FRESH";
         }
 
-        // Display response
+        // Time
+        timePill.className = "time-pill visible";
+        timePill.textContent = elapsed + "ms";
+
+        // Show content
         if (contentType.includes("text/html")) {
-          const text = await res.text();
+          const html = await res.text();
+          viewer.innerHTML = "";
           const iframe = document.createElement("iframe");
-          iframe.className = "result-frame";
           iframe.sandbox = "allow-same-origin";
-          resultContent.appendChild(iframe);
+          viewer.appendChild(iframe);
           iframe.contentDocument.open();
-          iframe.contentDocument.write(text);
+          iframe.contentDocument.write(html);
           iframe.contentDocument.close();
         } else {
           const text = await res.text();
-          const pre = document.createElement("pre");
-          pre.style.cssText = "background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;overflow:auto;max-height:400px;font-size:0.85rem;color:var(--muted);font-family:'Cascadia Code',monospace;";
-          pre.textContent = text.slice(0, 5000);
-          resultContent.appendChild(pre);
+          viewer.innerHTML = '<pre style="flex:1;padding:24px;overflow:auto;color:var(--muted);font-family:monospace;font-size:0.85rem;margin:0;">' +
+            text.replace(/</g, "&lt;").slice(0, 10000) + '</pre>';
         }
 
-        // Info bar
-        resultInfo.innerHTML =
-          '<span>Time: <code>' + elapsed + 'ms</code></span>' +
-          '<span>Type: <code>' + contentType.split(";")[0] + '</code></span>' +
-          (cacheHeader ? '<span>Cache: <code>' + cacheHeader + '</code></span>' : '');
-
         addRecent(url);
-      } catch (err) {
-        resultStatus.innerHTML = '<div class="status-dot error"></div><span>Failed</span>';
-        cacheBadge.innerHTML = "";
-        resultContent.innerHTML = '<div class="result-error">Error: ' + err.message + '<br><br>Make sure your Prozy server is running and CORS is enabled.</div>';
-      }
 
-      goBtn.disabled = false;
-      goBtn.textContent = "Go";
+      } catch (err) {
+        viewer.innerHTML =
+          '<div class="error-msg">' +
+            '<div class="error-icon">&#x26A0;</div>' +
+            '<div class="error-text">Could not load page</div>' +
+            '<div class="error-detail">' + err.message + '. Make sure your Prozy server is running.</div>' +
+            '<button class="try-again" onclick="browse(\'' + url.replace(/'/g, "\\'") + '\')">Try Again</button>' +
+          '</div>';
+      }
+    }
+
+    // Go back to home
+    function goHome() {
+      document.getElementById("landing").style.display = "";
+      document.getElementById("topBar").classList.remove("visible");
+      document.getElementById("viewer").classList.remove("visible");
+      document.getElementById("viewer").innerHTML = "";
+      document.getElementById("mainInput").value = "";
+      document.getElementById("mainInput").focus();
+      document.getElementById("cachePill").className = "cache-pill";
+      document.getElementById("timePill").className = "time-pill";
+    }
+
+    // Settings
+    function toggleSettings() {
+      const p = document.getElementById("settingsPanel");
+      p.classList.toggle("visible");
+      if (p.classList.contains("visible")) checkServer();
+    }
+
+    let checkTimeout;
+    function checkServerDebounced() {
+      clearTimeout(checkTimeout);
+      checkTimeout = setTimeout(checkServer, 500);
+    }
+
+    async function checkServer() {
+      const url = document.getElementById("serverInput").value.trim().replace(/\/+$/, "");
+      localStorage.setItem(STORAGE_SERVER, url);
+      const dot = document.getElementById("serverDot");
+      const label = document.getElementById("serverLabel");
+      dot.className = "dot checking";
+      label.textContent = "Checking...";
+      try {
+        const res = await fetch(url + "/health", { mode: "cors" });
+        const data = await res.json();
+        if (data.status === "ok") {
+          dot.className = "dot online";
+          label.textContent = "Online - " + data.cached + " cached";
+        } else {
+          dot.className = "dot offline";
+          label.textContent = "Unexpected response";
+        }
+      } catch {
+        dot.className = "dot offline";
+        label.textContent = "Offline - start your server";
+      }
     }
   </script>
 </body>
